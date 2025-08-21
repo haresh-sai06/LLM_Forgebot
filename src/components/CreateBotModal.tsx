@@ -8,6 +8,7 @@
 
 @@ .. @@
  const CreateBotModal: React.FC<CreateBotModalProps> = ({ isOpen, onClose, onBotCreated }) => {
+ }
 -  const [user] = useAuthState(auth);
 +  const { user } = useAuth();
    const [botName, setBotName] = useState('');
@@ -50,6 +51,7 @@
    if (!isOpen) return null;
 
    return (
+   )
 -    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
 -      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
 -        <h2 className="text-xl font-bold mb-4">Create New Bot</h2>
