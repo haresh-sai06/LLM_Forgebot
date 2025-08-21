@@ -1,5 +1,5 @@
 import { useState, FormEvent, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,25 +9,10 @@ import { Home, ArrowRight, Github, Chrome, Bot } from "lucide-react";
 import { Link } from "react-router-dom";
 import { twMerge } from 'tailwind-merge';
 
-// Dummy imports that simulate your actual lib/firebase.ts file
-// In your actual project, this code would be in lib/firebase.ts
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, setDoc, doc, getDoc } from "firebase/firestore";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyC3cIUul4sk7uN0xvjMCZ_l4_jVLodEZHQ",
-  authDomain: "llmforgebot.firebaseapp.com",
-  projectId: "llmforgebot",
-  storageBucket: "llmforgebot.firebasestorage.app",
-  messagingSenderId: "286106831325",
-  appId: "1:286106831325:web:d48b00e3c9a9f132bcce34",
-  measurementId: "G-R0RSKFL368"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { auth, db } from '../lib/firebase'; // Import auth and db from your firebase config
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, GithubAuthProvider } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
+import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 
 // A simple component to render the unique background effect
 const InteractiveBackground = () => (
@@ -49,12 +34,21 @@ const AuthPage = () => {
   const [signupPassword, setSignupPassword] = useState("");
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth(); // Use the useAuth hook
+
+  // If user is already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
 
   const handleFlip = () => {
-    setMessage(null);
+    setMessage(null); // Clear any messages on flip
     setIsFlipped(!isFlipped);
   };
-  
+
   // Handlers for authentication
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
@@ -62,9 +56,9 @@ const AuthPage = () => {
     try {
       await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
       setMessage({ type: 'success', text: 'Signed in successfully!' });
-      // navigate("/dashboard"); This will be handled by the auth state listener
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to sign in. Please check your email and password.' });
+      // Redirection handled by useAuth effect
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Failed to sign in. Please check your email and password.' });
       console.error("Sign-in error:", error);
     }
   };
@@ -75,7 +69,7 @@ const AuthPage = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
       const user = userCredential.user;
-      
+
       // Store additional user data in Firestore
       await setDoc(doc(db, "users", user.uid), {
         username: signupUsername,
@@ -84,10 +78,36 @@ const AuthPage = () => {
       });
 
       setMessage({ type: 'success', text: 'Account created successfully!' });
-      // navigate("/dashboard"); This will be handled by the auth state listener
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to create account. Please try again.' });
+      // Redirection handled by useAuth effect
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Failed to create account. Please try again.' });
       console.error("Sign-up error:", error);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setMessage({ type: 'info', text: 'Signing in with Google...' });
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      setMessage({ type: 'success', text: 'Signed in with Google successfully!' });
+      // Redirection handled by useAuth effect
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Failed to sign in with Google.' });
+      console.error("Google Sign-in error:", error);
+    }
+  };
+
+  const handleGitHubSignIn = async () => {
+    setMessage({ type: 'info', text: 'Signing in with GitHub...' });
+    const provider = new GithubAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      setMessage({ type: 'success', text: 'Signed in with GitHub successfully!' });
+      // Redirection handled by useAuth effect
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Failed to sign in with GitHub.' });
+      console.error("GitHub Sign-in error:", error);
     }
   };
 
@@ -113,8 +133,8 @@ const AuthPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      
-      <motion.div 
+
+      <motion.div
         className="relative z-10 w-full max-w-md"
         style={{ perspective: "1000px" }}
       >
@@ -141,11 +161,11 @@ const AuthPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-4 mb-6 z-10">
-                  <Button variant="outline" className="flex-1 group">
+                  <Button variant="outline" className="flex-1 group" onClick={handleGitHubSignIn}>
                     <Github className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
                     GitHub
                   </Button>
-                  <Button variant="outline" className="flex-1 group">
+                  <Button variant="outline" className="flex-1 group" onClick={handleGoogleSignIn}>
                     <Chrome className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
                     Google
                   </Button>
@@ -186,7 +206,7 @@ const AuthPage = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           {/* Back of the card: Sign Up Form */}
           <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
             <Card className={twMerge("glass-card neon-border-green", !isFlipped && "opacity-0 pointer-events-none")}>
@@ -205,11 +225,11 @@ const AuthPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                  <Button variant="outline" className="flex-1 group">
+                  <Button variant="outline" className="flex-1 group" onClick={handleGitHubSignIn}>
                     <Github className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
                     GitHub
                   </Button>
-                  <Button variant="outline" className="flex-1 group">
+                  <Button variant="outline" className="flex-1 group" onClick={handleGoogleSignIn}>
                     <Chrome className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
                     Google
                   </Button>
@@ -255,83 +275,4 @@ const AuthPage = () => {
   );
 };
 
-// Dashboard component that users are redirected to
-const DashboardPage = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [userData, setUserData] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        // Fetch user data from Firestore
-        const userDocRef = doc(db, "users", currentUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          setUserData(userDocSnap.data());
-        }
-      } else {
-        // No user is signed in, redirect to login page
-        navigate("/auth");
-      }
-    });
-
-    // Clean up the listener on component unmount
-    return () => unsubscribe();
-  }, [navigate]);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
-
-  if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center dark">
-        <p className="text-xl">Redirecting to login...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4 relative dark">
-      <InteractiveBackground />
-      <Card className="glass-card z-10 max-w-lg w-full neon-border-purple">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-extrabold tracking-tight gradient-heading">
-            Welcome to your Dashboard
-          </CardTitle>
-          <CardDescription className="text-muted-foreground mt-2">
-            You are signed in as {userData?.username || user.email}.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Bot className="h-8 w-8 text-primary" />
-            <p className="text-lg">This is where your content and bots will live.</p>
-          </div>
-          <Button onClick={handleSignOut} className="w-full">
-            Log Out
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-// Main App component to handle routing
-export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<AuthPage />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
+export default AuthPage;

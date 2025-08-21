@@ -5,13 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 
-import Index from "./pages/Index";
 import Models from "./pages/Models";
 import Builder from "./pages/Builder";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -30,7 +28,7 @@ const AppContent = () => {
   return (
     <>
       {showHeaderFooter && <MainNav />}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col overflow-hidden"> {/* Added overflow-hidden */}
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
@@ -69,8 +67,8 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
       <Sonner />
-        <AuthProvider>
  <BrowserRouter>
+        <AuthProvider> {/* AuthProvider wraps BrowserRouter */}
  <div className="flex flex-col min-h-screen">
  <AppContent />
  </div>
