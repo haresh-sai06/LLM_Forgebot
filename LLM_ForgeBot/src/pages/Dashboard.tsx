@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
 import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
-import { db } from "@/firebase"; // Assuming you have initialized Firebase and exported db
+import { db } from "../firebase"; // Adjust the path as needed based on your folder structure
 
 const mockData = {
   projects: [
@@ -175,13 +175,12 @@ export default function Dashboard() {
                     </span>
                     <Button variant="destructive" size="sm" onClick={() => handleDeleteBot(bot.id)}>Delete</Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/builder?project=${project.name}`}>Manage</Link>
+                      <Link to={`/builder?project=${bot.name}`}>Manage</Link>
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-            )
+            )))}
           </div>
         </section>
         

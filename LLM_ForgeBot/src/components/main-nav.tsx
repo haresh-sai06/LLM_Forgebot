@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 import { signOut } from "firebase/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Bot, Menu, X } from "lucide-react";
