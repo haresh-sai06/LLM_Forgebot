@@ -1,11 +1,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, ArrowRight, Github, Chrome, Bot } from "lucide-react";
+import { Home, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { twMerge } from 'tailwind-merge';
 
@@ -14,18 +10,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthP
 import { setDoc, doc } from "firebase/firestore";
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 
-// A simple component to render the unique background effect
-const InteractiveBackground = () => (
-  <div className="absolute inset-0 z-0 overflow-hidden">
-    {/* Animated grid effect */}
-    <div className="grid-pattern-small absolute inset-0 opacity-[0.02]"></div>
-    {/* Background gradient */}
-    <div className="absolute inset-0 bg-gradient-to-br from-background to-background/50"></div>
-  </div>
-);
-
-// The main interactive login/sign-up component
-const AuthPage = () => {
+const AuthPage: React.FC = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -42,7 +27,6 @@ const AuthPage = () => {
       navigate("/dashboard");
     }
   }, [user, navigate]);
-
 
   const handleFlip = () => {
     setMessage(null); // Clear any messages on flip
@@ -112,10 +96,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 relative dark">
-      <InteractiveBackground />
-
-      {/* Message Area */}
+    <div className="min-h-screen h-screen flex items-center justify-center bg-gray-900 overflow-hidden">
       <AnimatePresence>
         {message && (
           <motion.div
@@ -135,7 +116,7 @@ const AuthPage = () => {
       </AnimatePresence>
 
       <motion.div
-        className="relative z-10 w-full max-w-md"
+        className="relative z-10 w-full max-w-md sm:max-w-lg md:max-w-xl"
         style={{ perspective: "1000px" }}
       >
         <motion.div
@@ -145,129 +126,143 @@ const AuthPage = () => {
         >
           {/* Front of the card: Login Form */}
           <div className="absolute inset-0 [backface-visibility:hidden]">
-            <Card className={twMerge("glass-card neon-border-blue", isFlipped && "opacity-0 pointer-events-none")}>
-              <CardHeader className="text-center">
-                <Button variant="ghost" className="absolute top-4 left-4 z-20" size="icon" asChild>
-                  <Link to="/">
-                    <Home className="h-5 w-5" />
-                  </Link>
-                </Button>
-                <CardTitle className="text-3xl font-extrabold tracking-tight gradient-heading">
-                  Welcome Back
-                </CardTitle>
-                <CardDescription className="text-muted-foreground mt-2">
-                  Log in to build and manage your custom chatbots.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col sm:flex-row gap-4 mb-6 z-10">
-                  <Button variant="outline" className="flex-1 group" onClick={handleGitHubSignIn}>
-                    <Github className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
-                    GitHub
-                  </Button>
-                  <Button variant="outline" className="flex-1 group" onClick={handleGoogleSignIn}>
-                    <Chrome className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
-                    Google
-                  </Button>
+            <div className={twMerge("bg-gray-800 rounded-xl p-10 text-gray-100 shadow-lg", isFlipped && "opacity-0 pointer-events-none")}>
+              <button className="absolute top-4 left-4 z-20 text-gray-400 hover:text-gray-100">
+                <Link to="/">
+                  <Home className="h-5 w-5" />
+                </Link>
+              </button>
+              <p className="text-center text-3xl font-bold mb-8">Login</p>
+              <div className="flex justify-center space-x-4 mb-6">
+                <button onClick={handleGoogleSignIn} className="p-4 rounded-md bg-transparent hover:bg-gray-700 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-6 h-6 fill-current">
+                    <path d="M16.318 13.714v5.484h9.078c-0.37 2.354-2.745 6.901-9.078 6.901-5.458 0-9.917-4.521-9.917-10.099s4.458-10.099 9.917-10.099c3.109 0 5.193 1.318 6.38 2.464l4.339-4.182c-2.786-2.599-6.396-4.182-10.719-4.182-8.844 0-16 7.151-16 16s7.156 16 16 16c9.234 0 15.365-6.49 15.365-15.635 0-1.052-0.115-1.854-0.255-2.651z" />
+                  </svg>
+                </button>
+                <button onClick={handleGitHubSignIn} className="p-4 rounded-md bg-transparent hover:bg-gray-700 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-6 h-6 fill-current">
+                    <path d="M16 0.396c-8.839 0-16 7.167-16 16 0 7.073 4.584 13.068 10.937 15.183 0.803 0.151 1.093-0.344 1.093-0.772 0-0.38-0.009-1.385-0.015-2.719-4.453 0.964-5.391-2.151-5.391-2.151-0.729-1.844-1.781-2.339-1.781-2.339-1.448-0.989 0.115-0.968 0.115-0.968 1.604 0.109 2.448 1.645 2.448 1.645 1.427 2.448 3.744 1.74 4.661 1.328 0.14-1.031 0.557-1.74 1.011-2.135-3.552-0.401-7.287-1.776-7.287-7.907 0-1.751 0.62-3.177 1.645-4.297-0.177-0.401-0.719-2.031 0.141-4.235 0 0 1.339-0.427 4.4 1.641 1.281-0.355 2.641-0.532 4-0.541 1.36 0.009 2.719 0.187 4 0.541 3.043-2.068 4.381-1.641 4.381-1.641 0.859 2.204 0.317 3.833 0.161 4.235 1.015 1.12 1.635 2.547 1.635 4.297 0 6.145-3.74 7.5-7.296 7.891 0.556 0.479 1.077 1.464 1.077 2.959 0 2.14-0.020 3.864-0.020 4.385 0 0.416 0.28 0.916 1.104 0.755 6.4-2.093 10.979-8.093 10.979-15.156 0-8.833-7.161-16-16-16z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex items-center pt-6 mb-6">
+                <div className="flex-1 h-px bg-gray-600"></div>
+                <p className="px-4 text-base text-gray-400">Or with email</p>
+                <div className="flex-1 h-px bg-gray-600"></div>
+              </div>
+              <form className="space-y-6" onSubmit={handleSignIn}>
+                <div>
+                  <label htmlFor="login-email" className="block text-base text-gray-400 mb-2">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="login-email"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800 px-5 py-4 text-gray-100 focus:border-purple-400 outline-none text-base"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    required
+                  />
                 </div>
-                <div className="relative mb-6 z-10">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-700"></span>
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or with email</span>
+                <div>
+                  <label htmlFor="login-password" className="block text-base text-gray-400 mb-2">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    id="login-password"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800 px-5 py-4 text-gray-100 focus:border-purple-400 outline-none text-base"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required
+                  />
+                  <div className="flex justify-end text-sm text-gray-400 mt-3">
+                    <a href="#" className="text-gray-100 hover:underline hover:text-purple-400">Forgot Password?</a>
                   </div>
                 </div>
-                <form className="space-y-4" onSubmit={handleSignIn}>
-                  <div className="grid gap-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input id="login-email" type="email" placeholder="you@example.com" required className="border-gray-700 bg-gray-900 focus:border-neon-blue" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
-                  </div>
-                  <div className="grid gap-2">
-                    <div className="flex items-center">
-                      <Label htmlFor="login-password">Password</Label>
-                      <Link to="#" className="ml-auto inline-block text-sm underline text-muted-foreground hover:text-primary transition-colors">
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <Input id="login-password" type="password" required className="border-gray-700 bg-gray-900 focus:border-neon-blue" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
-                  </div>
-                  <Button type="submit" className="w-full group">
-                    Sign In
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </form>
-                <div className="mt-4 text-center text-sm z-10">
-                  Don't have an account?{" "}
-                  <Button variant="link" onClick={handleFlip} className="p-0 h-auto underline-offset-4 text-primary">
-                    Sign up
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                <button className="w-full bg-purple-400 text-gray-900 py-4 rounded-lg font-semibold text-base hover:bg-purple-500 transition-colors group">
+                  Sign in
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </form>
+              <p className="text-center text-sm text-gray-400 mt-6">
+                Don't have an account?{' '}
+                <span onClick={handleFlip} className="text-gray-100 hover:underline hover:text-purple-400 cursor-pointer">Sign up</span>
+              </p>
+            </div>
           </div>
 
           {/* Back of the card: Sign Up Form */}
           <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-            <Card className={twMerge("glass-card neon-border-green", !isFlipped && "opacity-0 pointer-events-none")}>
-              <CardHeader className="text-center">
-                <Button variant="ghost" className="absolute top-4 left-4 z-20" size="icon" asChild>
-                  <Link to="/">
-                    <Home className="h-5 w-5" />
-                  </Link>
-                </Button>
-                <CardTitle className="text-3xl font-extrabold tracking-tight gradient-heading">
-                  Join BotForge
-                </CardTitle>
-                <CardDescription className="text-muted-foreground mt-2">
-                  Create an account to get started for free.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                  <Button variant="outline" className="flex-1 group" onClick={handleGitHubSignIn}>
-                    <Github className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
-                    GitHub
-                  </Button>
-                  <Button variant="outline" className="flex-1 group" onClick={handleGoogleSignIn}>
-                    <Chrome className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
-                    Google
-                  </Button>
+            <div className={twMerge("bg-gray-800 rounded-xl p-10 text-gray-100 shadow-lg", !isFlipped && "opacity-0 pointer-events-none")}>
+              <button className="absolute top-4 left-4 z-20 text-gray-400 hover:text-gray-100">
+                <Link to="/">
+                  <Home className="h-5 w-5" />
+                </Link>
+              </button>
+              <p className="text-center text-3xl font-bold mb-8">Sign Up</p>
+              <div className="flex justify-center space-x-4 mb-6">
+                <button onClick={handleGoogleSignIn} className="p-4 rounded-md bg-transparent hover:bg-gray-700 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-6 h-6 fill-current">
+                    <path d="M16.318 13.714v5.484h9.078c-0.37 2.354-2.745 6.901-9.078 6.901-5.458 0-9.917-4.521-9.917-10.099s4.458-10.099 9.917-10.099c3.109 0 5.193 1.318 6.38 2.464l4.339-4.182c-2.786-2.599-6.396-4.182-10.719-4.182-8.844 0-16 7.151-16 16s7.156 16 16 16c9.234 0 15.365-6.49 15.365-15.635 0-1.052-0.115-1.854-0.255-2.651z" />
+                  </svg>
+                </button>
+                <button onClick={handleGitHubSignIn} className="p-4 rounded-md bg-transparent hover:bg-gray-700 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-6 h-6 fill-current">
+                    <path d="M16 0.396c-8.839 0-16 7.167-16 16 0 7.073 4.584 13.068 10.937 15.183 0.803 0.151 1.093-0.344 1.093-0.772 0-0.38-0.009-1.385-0.015-2.719-4.453 0.964-5.391-2.151-5.391-2.151-0.729-1.844-1.781-2.339-1.781-2.339-1.448-0.989 0.115-0.968 0.115-0.968 1.604 0.109 2.448 1.645 2.448 1.645 1.427 2.448 3.744 1.74 4.661 1.328 0.14-1.031 0.557-1.74 1.011-2.135-3.552-0.401-7.287-1.776-7.287-7.907 0-1.751 0.62-3.177 1.645-4.297-0.177-0.401-0.719-2.031 0.141-4.235 0 0 1.339-0.427 4.4 1.641 1.281-0.355 2.641-0.532 4-0.541 1.36 0.009 2.719 0.187 4 0.541 3.043-2.068 4.381-1.641 4.381-1.641 0.859 2.204 0.317 3.833 0.161 4.235 1.015 1.12 1.635 2.547 1.635 4.297 0 6.145-3.74 7.5-7.296 7.891 0.556 0.479 1.077 1.464 1.077 2.959 0 2.14-0.020 3.864-0.020 4.385 0 0.416 0.28 0.916 1.104 0.755 6.4-2.093 10.979-8.093 10.979-15.156 0-8.833-7.161-16-16-16z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex items-center pt-6 mb-6">
+                <div className="flex-1 h-px bg-gray-600"></div>
+                <p className="px-4 text-base text-gray-400">Or with email</p>
+                <div className="flex-1 h-px bg-gray-600"></div>
+              </div>
+              <form className="space-y-6" onSubmit={handleSignUp}>
+                <div>
+                  <label htmlFor="signup-username" className="block text-base text-gray-400 mb-2">Username</label>
+                  <input
+                    type="text"
+                    name="username"
+                    id="signup-username"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800 px-5 py-4 text-gray-100 focus:border-purple-400 outline-none text-base"
+                    value={signupUsername}
+                    onChange={(e) => setSignupUsername(e.target.value)}
+                    required
+                  />
                 </div>
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-700"></span>
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or with email</span>
-                  </div>
+                <div>
+                  <label htmlFor="signup-email" className="block text-base text-gray-400 mb-2">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="signup-email"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800 px-5 py-4 text-gray-100 focus:border-purple-400 outline-none text-base"
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
+                    required
+                  />
                 </div>
-                <form className="space-y-4" onSubmit={handleSignUp}>
-                  <div className="grid gap-2">
-                    <Label htmlFor="signup-username">Username</Label>
-                    <Input id="signup-username" type="text" placeholder="botforger" required className="border-gray-700 bg-gray-900 focus:border-neon-green" value={signupUsername} onChange={(e) => setSignupUsername(e.target.value)} />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input id="signup-email" type="email" placeholder="you@example.com" required className="border-gray-700 bg-gray-900 focus:border-neon-green" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input id="signup-password" type="password" required className="border-gray-700 bg-gray-900 focus:border-neon-green" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} />
-                  </div>
-                  <Button type="submit" className="w-full group">
-                    Create Account
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </form>
-                <div className="mt-4 text-center text-sm">
-                  Already have an account?{" "}
-                  <Button variant="link" onClick={handleFlip} className="p-0 h-auto underline-offset-4 text-primary">
-                    Log in
-                  </Button>
+                <div>
+                  <label htmlFor="signup-password" className="block text-base text-gray-400 mb-2">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    id="signup-password"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800 px-5 py-4 text-gray-100 focus:border-purple-400 outline-none text-base"
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
+                    required
+                  />
                 </div>
-              </CardContent>
-            </Card>
+                <button className="w-full bg-purple-400 text-gray-900 py-4 rounded-lg font-semibold text-base hover:bg-purple-500 transition-colors group">
+                  Create Account
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </form>
+              <p className="text-center text-sm text-gray-400 mt-6">
+                Already have an account?{' '}
+                <span onClick={handleFlip} className="text-gray-100 hover:underline hover:text-purple-400 cursor-pointer">Log in</span>
+              </p>
+            </div>
           </div>
         </motion.div>
       </motion.div>
