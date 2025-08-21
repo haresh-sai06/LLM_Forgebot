@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -44,8 +43,12 @@ export function MainNav() {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-4">
             <ThemeToggle />
-            <Button variant="ghost">Sign In</Button>
-            <Button>Get Started</Button>
+            <Button variant="ghost" asChild>
+              <Link to="/login">Sign In</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/builder">Get Started</Link>
+            </Button>
           </div>
           <div className="flex md:hidden">
             <ThemeToggle />
@@ -84,8 +87,12 @@ export function MainNav() {
               ))}
             </div>
             <div className="grid grid-cols-2 gap-2 pt-4">
-              <Button variant="outline" className="w-full">Sign In</Button>
-              <Button className="w-full">Get Started</Button>
+              <Button variant="outline" className="w-full" asChild>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+              </Button>
+              <Button className="w-full" asChild>
+                <Link to="/builder" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+              </Button>
             </div>
           </div>
         </div>
