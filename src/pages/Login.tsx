@@ -4,12 +4,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { Bot, User, Mail, Lock, ArrowRight, Github, Chrome, Twitter, Home } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Home, ArrowRight, Github, Chrome } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { twMerge } from 'tailwind-merge';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "../firebase";
+
+// Dummy imports for Firebase and Auth context - replace with your actual setup
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, setDoc, doc } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+
+// Your Firebase configuration (replace with your actual config)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase and services
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 // A simple component to render the unique background effect
 const InteractiveBackground = () => (
@@ -21,165 +38,6 @@ const InteractiveBackground = () => (
   </div>
 );
 
-// Google Sign In Button Component
-const GoogleSignInButton = ({ setMessage }: { setMessage: (msg: { type: 'success' | 'error' | 'info', text: string } | null) => void }) => {
-  const navigate = useNavigate();
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      setMessage({ type: 'success', text: 'Successfully signed in with Google!' });
-      navigate('/dashboard');
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
-    }
-  };
-
-  return (
-    <Button variant="outline" className="flex-1 group" onClick={handleGoogleSignIn}>
-      <Chrome className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
-      Google
-    </Button>
-  );
-};
-
-// Login Form Body Component
-const LoginFormBody = ({ 
-  email, 
-  setEmail, 
-  password, 
-  setPassword, 
-  setMessage 
-}: {
-  email: string;
-  setEmail: (email: string) => void;
-  password: string;
-  setPassword: (password: string) => void;
-  setMessage: (msg: { type: 'success' | 'error' | 'info', text: string } | null) => void;
-}) => {
-  const navigate = useNavigate();
-
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setMessage({ type: 'success', text: 'Login successful!' });
-      navigate('/dashboard');
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
-    }
-  };
-
-  return (
-    <form onSubmit={handleLogin} className="space-y-4">
-      <div className="grid gap-2">
-        <Label htmlFor="login-email">Email</Label>
-        <Input 
-          id="login-email" 
-          type="email" 
-          placeholder="you@example.com" 
-          required 
-          className="border-gray-700 bg-gray-900 focus:border-neon-blue"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="login-password">Password</Label>
-        <Input 
-          id="login-password" 
-          type="password" 
-          required 
-          className="border-gray-700 bg-gray-900 focus:border-neon-blue"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-      <Button type="submit" className="w-full group">
-        Sign In
-        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-      </Button>
-    </form>
-  );
-};
-
-// Signup Form Body Component
-const SignupFormBody = ({ 
-  username,
-  setUsername,
-  email, 
-  setEmail, 
-  password, 
-  setPassword, 
-  setMessage 
-}: {
-  username: string;
-  setUsername: (username: string) => void;
-  email: string;
-  setEmail: (email: string) => void;
-  password: string;
-  setPassword: (password: string) => void;
-  setMessage: (msg: { type: 'success' | 'error' | 'info', text: string } | null) => void;
-}) => {
-  const navigate = useNavigate();
-
-  const handleSignup = async (e: FormEvent) => {
-    e.preventDefault();
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      setMessage({ type: 'success', text: 'Account created successfully!' });
-      navigate('/dashboard');
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
-    }
-  };
-
-  return (
-    <form onSubmit={handleSignup} className="space-y-4">
-      <div className="grid gap-2">
-        <Label htmlFor="signup-username">Username</Label>
-        <Input 
-          id="signup-username" 
-          type="text" 
-          placeholder="botforger" 
-          required 
-          className="border-gray-700 bg-gray-900 focus:border-neon-green"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="signup-email">Email</Label>
-        <Input 
-          id="signup-email" 
-          type="email" 
-          placeholder="you@example.com" 
-          required 
-          className="border-gray-700 bg-gray-900 focus:border-neon-green"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="signup-password">Password</Label>
-        <Input 
-          id="signup-password" 
-          type="password" 
-          required 
-          className="border-gray-700 bg-gray-900 focus:border-neon-green"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-      <Button type="submit" className="w-full group">
-        Create Account
-        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-      </Button>
-    </form>
-  );
-};
-
 // The main interactive login/sign-up component
 export default function AuthPage() {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -189,10 +47,47 @@ export default function AuthPage() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
+  const navigate = useNavigate();
 
   const handleFlip = () => {
+    setMessage(null); // Clear any messages on flip
     setIsFlipped(!isFlipped);
-    setMessage(null);
+  };
+  
+  // Handlers for authentication
+  const handleSignIn = async (e: FormEvent) => {
+    e.preventDefault();
+    setMessage({ type: 'info', text: 'Signing in...' });
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      setMessage({ type: 'success', text: 'Signed in successfully!' });
+      navigate("/dashboard"); // Redirect to the dashboard on success
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to sign in. Please check your email and password.' });
+      console.error("Sign-in error:", error);
+    }
+  };
+
+  const handleSignUp = async (e: FormEvent) => {
+    e.preventDefault();
+    setMessage({ type: 'info', text: 'Creating account...' });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
+      const user = userCredential.user;
+      
+      // Store additional user data in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        username: signupUsername,
+        email: signupEmail,
+        createdAt: new Date()
+      });
+
+      setMessage({ type: 'success', text: 'Account created successfully!' });
+      navigate("/dashboard"); // Redirect to the dashboard on success
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to create account. Please try again.' });
+      console.error("Sign-up error:", error);
+    }
   };
 
   return (
@@ -217,7 +112,7 @@ export default function AuthPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
+      
       <motion.div 
         className="relative z-10 w-full max-w-md"
         style={{ perspective: "1000px" }}
@@ -245,7 +140,14 @@ export default function AuthPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-4 mb-6 z-10">
-                  <GoogleSignInButton setMessage={setMessage} />
+                  <Button variant="outline" className="flex-1 group">
+                    <Github className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
+                    GitHub
+                  </Button>
+                  <Button variant="outline" className="flex-1 group">
+                    <Chrome className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
+                    Google
+                  </Button>
                 </div>
                 <div className="relative mb-6 z-10">
                   <div className="absolute inset-0 flex items-center">
@@ -255,13 +157,25 @@ export default function AuthPage() {
                     <span className="bg-card px-2 text-muted-foreground">Or with email</span>
                   </div>
                 </div>
-                <LoginFormBody
-                  email={loginEmail}
-                  setEmail={setLoginEmail}
-                  password={loginPassword}
-                  setPassword={setLoginPassword}
-                  setMessage={setMessage}
-                />
+                <form className="space-y-4" onSubmit={handleSignIn}>
+                  <div className="grid gap-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input id="login-email" type="email" placeholder="you@example.com" required className="border-gray-700 bg-gray-900 focus:border-neon-blue" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+                  </div>
+                  <div className="grid gap-2">
+                    <div className="flex items-center">
+                      <Label htmlFor="login-password">Password</Label>
+                      <Link to="#" className="ml-auto inline-block text-sm underline text-muted-foreground hover:text-primary transition-colors">
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <Input id="login-password" type="password" required className="border-gray-700 bg-gray-900 focus:border-neon-blue" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+                  </div>
+                  <Button type="submit" className="w-full group">
+                    Sign In
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </form>
                 <div className="mt-4 text-center text-sm z-10">
                   Don't have an account?{" "}
                   <Button variant="link" onClick={handleFlip} className="p-0 h-auto underline-offset-4 text-primary">
@@ -294,7 +208,10 @@ export default function AuthPage() {
                     <Github className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
                     GitHub
                   </Button>
-                  <GoogleSignInButton setMessage={setMessage} />
+                  <Button variant="outline" className="flex-1 group">
+                    <Chrome className="mr-2 h-4 w-4 text-white group-hover:text-primary transition-colors" />
+                    Google
+                  </Button>
                 </div>
                 <div className="relative mb-6">
                   <div className="absolute inset-0 flex items-center">
@@ -304,15 +221,24 @@ export default function AuthPage() {
                     <span className="bg-card px-2 text-muted-foreground">Or with email</span>
                   </div>
                 </div>
-                <SignupFormBody
-                  username={signupUsername}
-                  setUsername={setSignupUsername}
-                  email={signupEmail}
-                  setEmail={setSignupEmail}
-                  password={signupPassword}
-                  setPassword={setSignupPassword}
-                  setMessage={setMessage}
-                />
+                <form className="space-y-4" onSubmit={handleSignUp}>
+                  <div className="grid gap-2">
+                    <Label htmlFor="signup-username">Username</Label>
+                    <Input id="signup-username" type="text" placeholder="botforger" required className="border-gray-700 bg-gray-900 focus:border-neon-green" value={signupUsername} onChange={(e) => setSignupUsername(e.target.value)} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input id="signup-email" type="email" placeholder="you@example.com" required className="border-gray-700 bg-gray-900 focus:border-neon-green" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input id="signup-password" type="password" required className="border-gray-700 bg-gray-900 focus:border-neon-green" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} />
+                  </div>
+                  <Button type="submit" className="w-full group">
+                    Create Account
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </form>
                 <div className="mt-4 text-center text-sm">
                   Already have an account?{" "}
                   <Button variant="link" onClick={handleFlip} className="p-0 h-auto underline-offset-4 text-primary">
