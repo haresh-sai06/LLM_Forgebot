@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { signOut } from "firebase/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Bot, Menu, X } from "lucide-react";
 
@@ -16,6 +18,8 @@ const routes = [
 
 export function MainNav() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, auth } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -42,12 +46,24 @@ export function MainNav() {
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-4">
-            <ThemeToggle />
-            <Button variant="ghost" asChild>
-              <Link to="/login">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/builder">Get Started</Link>
+ <ThemeToggle />
+            {user ? (
+ <Button variant="ghost" onClick={async () => {
+ try {
+ await signOut(auth);
+ navigate("/");
+ } catch (error) {
+ console.error("Logout failed:", error);
+ }
+              }}>
+ Logout
+ </Button>
+            ) : (
+ <Button variant="ghost" asChild>
+ <Link to="/login">Sign In</Link>
+ </Button>)}
+ <Button asChild>
+ <Link to="/builder">Get Started</Link>
             </Button>
           </div>
           <div className="flex md:hidden">
@@ -86,10 +102,20 @@ export function MainNav() {
                 </Link>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-2 pt-4">
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-              </Button>
+ <div className="grid grid-cols-2 gap-2 pt-4">
+              {user ? (
+ <Button variant="outline" className="w-full" onClick={async () => {
+ try {
+ await signOut(auth);
+ navigate("/");
+ setMobileMenuOpen(false);
+ } catch (error) {
+ console.error("Logout failed:", error);
+ }
+                }}>
+ Logout
+ </Button>
+              ) : (<Button variant="outline" className="w-full" asChild> <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link> </Button>)}
               <Button className="w-full" asChild>
                 <Link to="/builder" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
               </Button>

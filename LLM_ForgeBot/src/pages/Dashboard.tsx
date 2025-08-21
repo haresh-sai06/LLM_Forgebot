@@ -1,11 +1,14 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Bot, Plus, FileText, Activity, Users, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
+import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
+import { db } from "@/firebase"; // Assuming you have initialized Firebase and exported db
 
-// This is a mock data set. In a real application, you would fetch this from an API.
 const mockData = {
   projects: [
     { name: "Customer Support Bot", status: "Active", lastUpdated: "2 hours ago" },
@@ -20,7 +23,36 @@ const mockData = {
   },
 };
 
+
 export default function Dashboard() {
+  const { user, loading } = useAuth();
+  const [bots, setBots] = useState([]);
+
+  useEffect(() => {
+    if (user) {
+      const q = query(collection(db, "bots"), where("userId", "==", user.uid));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const botsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setBots(botsData);
+      });
+      return () => unsubscribe();
+    }
+  }, [user]);
+
+  const handleDeleteBot = async (botId) => {
+    if (window.confirm("Are you sure you want to delete this bot?")) {
+      try {
+        await deleteDoc(doc(db, "bots", botId));
+      } catch (error) {
+        console.error("Error deleting bot: ", error);
+      }
+    }
+  };
+
+  if (loading) {
+    return <div>Loading...</div>; // Or a more sophisticated loading indicator
+  }
+
   return (
     <div className="flex flex-col min-h-screen dark">
       {/* Dashboard Header */}
@@ -36,6 +68,9 @@ export default function Dashboard() {
             </Link>
           </Button>
         </div>
+        {user && (
+          <p className="text-muted-foreground text-lg mb-4">Your User ID: {user.uid}</p>
+        )}
         <p className="text-muted-foreground text-lg">
           Welcome back. Here's a quick overview of your projects and system status.
         </p>
@@ -117,23 +152,28 @@ export default function Dashboard() {
             </Button>
           </div>
 
+
           <div className="space-y-4">
-            {mockData.projects.map((project, index) => (
-              <Card key={index} className="glass-card hover:bg-card/70 transition-colors">
+            {bots.length === 0 ? (
+              <p className="text-muted-foreground text-center">No bots found. Create your first bot!</p>
+            ) : (
+              bots.map((bot) => (
+              <Card key={bot.id} className="glass-card hover:bg-card/70 transition-colors">
                 <CardContent className="p-6 flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <Bot className="h-6 w-6 text-primary" />
                     <div>
-                      <h3 className="text-lg font-semibold">{project.name}</h3>
+                      <h3 className="text-lg font-semibold">{bot.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Status: <span className="font-medium text-primary">{project.status}</span>
+                        Status: <span className="font-medium text-primary">{bot.status || 'Unknown'}</span>
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <span className="text-sm text-muted-foreground hidden sm:block">
-                      Last Updated: {project.lastUpdated}
+                      Created At: {new Date(bot.createdAt?.toDate()).toLocaleDateString()}
                     </span>
+                    <Button variant="destructive" size="sm" onClick={() => handleDeleteBot(bot.id)}>Delete</Button>
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/builder?project=${project.name}`}>Manage</Link>
                     </Button>
@@ -141,6 +181,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             ))}
+            )
           </div>
         </section>
         
