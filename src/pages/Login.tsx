@@ -1,29 +1,30 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, ArrowRight, Github, Chrome } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Home, ArrowRight, Github, Chrome, Bot } from "lucide-react";
+import { Link } from "react-router-dom";
 import { twMerge } from 'tailwind-merge';
 
-// Dummy imports for Firebase and Auth context - replace with your actual setup
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, setDoc, doc } from "firebase/firestore";
+// Dummy imports that simulate your actual lib/firebase.ts file
+// In your actual project, this code would be in lib/firebase.ts
 import { initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, setDoc, doc, getDoc } from "firebase/firestore";
 
-// Your Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC3cIUul4sk7uN0xvjMCZ_l4_jVLodEZHQ",
+  authDomain: "llmforgebot.firebaseapp.com",
+  projectId: "llmforgebot",
+  storageBucket: "llmforgebot.firebasestorage.app",
+  messagingSenderId: "286106831325",
+  appId: "1:286106831325:web:d48b00e3c9a9f132bcce34",
+  measurementId: "G-R0RSKFL368"
 };
 
-// Initialize Firebase and services
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -39,7 +40,7 @@ const InteractiveBackground = () => (
 );
 
 // The main interactive login/sign-up component
-export default function AuthPage() {
+const AuthPage = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -50,7 +51,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
 
   const handleFlip = () => {
-    setMessage(null); // Clear any messages on flip
+    setMessage(null);
     setIsFlipped(!isFlipped);
   };
   
@@ -61,7 +62,7 @@ export default function AuthPage() {
     try {
       await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
       setMessage({ type: 'success', text: 'Signed in successfully!' });
-      navigate("/dashboard"); // Redirect to the dashboard on success
+      // navigate("/dashboard"); This will be handled by the auth state listener
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to sign in. Please check your email and password.' });
       console.error("Sign-in error:", error);
@@ -83,7 +84,7 @@ export default function AuthPage() {
       });
 
       setMessage({ type: 'success', text: 'Account created successfully!' });
-      navigate("/dashboard"); // Redirect to the dashboard on success
+      // navigate("/dashboard"); This will be handled by the auth state listener
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to create account. Please try again.' });
       console.error("Sign-up error:", error);
@@ -251,5 +252,86 @@ export default function AuthPage() {
         </motion.div>
       </motion.div>
     </div>
+  );
+};
+
+// Dashboard component that users are redirected to
+const DashboardPage = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        // Fetch user data from Firestore
+        const userDocRef = doc(db, "users", currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          setUserData(userDocSnap.data());
+        }
+      } else {
+        // No user is signed in, redirect to login page
+        navigate("/auth");
+      }
+    });
+
+    // Clean up the listener on component unmount
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center dark">
+        <p className="text-xl">Redirecting to login...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4 relative dark">
+      <InteractiveBackground />
+      <Card className="glass-card z-10 max-w-lg w-full neon-border-purple">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-extrabold tracking-tight gradient-heading">
+            Welcome to your Dashboard
+          </CardTitle>
+          <CardDescription className="text-muted-foreground mt-2">
+            You are signed in as {userData?.username || user.email}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Bot className="h-8 w-8 text-primary" />
+            <p className="text-lg">This is where your content and bots will live.</p>
+          </div>
+          <Button onClick={handleSignOut} className="w-full">
+            Log Out
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Main App component to handle routing
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AuthPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
