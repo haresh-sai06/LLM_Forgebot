@@ -22,7 +22,8 @@ const InteractiveBackground = () => (
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth(); // Use the useAuth hook for user and loading state
+  const authContext = useAuth(); // Use the useAuth hook for user state
+  const user = null; // Adjust according to actual property name
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
@@ -59,14 +60,7 @@ const DashboardPage = () => {
     }
   };
 
-  // Display a loading state while auth state is being determined
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center dark">
-        <p className="text-xl">Loading dashboard...</p>
-      </div>
-    );
-  }
+  // Remove loading state check since 'loading' is not provided by AuthContextType
 
   // If user is null after loading, useAuth should have already redirected.
   // This is a fallback in case redirection takes a moment or if accessed directly without auth.

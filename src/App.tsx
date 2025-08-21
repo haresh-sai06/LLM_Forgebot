@@ -11,8 +11,11 @@ import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
+// import Login from "./pages/Login";
+import Index from "./pages/Index";
+import About from "./pages/About";
 import Signup from "./pages/Signup";
+import AuthPage from "./pages/AuthPage"; 
 
 import { MainNav } from "./components/main-nav";
 import { Footer } from "./components/footer";
@@ -31,7 +34,7 @@ const AppContent = () => {
       <main className="flex-1 flex flex-col overflow-hidden"> {/* Added overflow-hidden */}
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<Signup />} />
           <Route
             path="/dashboard"
@@ -48,7 +51,7 @@ const AppContent = () => {
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<AuthPage />} />
         </Routes>
       </main>
       {showHeaderFooter && <Footer />}
@@ -67,13 +70,13 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
       <Sonner />
- <BrowserRouter>
-        <AuthProvider> {/* AuthProvider wraps BrowserRouter */}
- <div className="flex flex-col min-h-screen">
- <AppContent />
- </div>
- </BrowserRouter>
-        </AuthProvider>
+ <AuthProvider> {/* AuthProvider wraps BrowserRouter */}
+   <BrowserRouter>
+     <div className="flex flex-col min-h-screen">
+       <AppContent />
+     </div>
+   </BrowserRouter>
+ </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
