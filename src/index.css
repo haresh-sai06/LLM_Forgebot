@@ -1,0 +1,44 @@
+@@ .. @@
+   .neon-border-orange {
+     --neon-color: theme('colors.neon.orange');
+     @apply neon-border before:from-neon-orange/50 before:to-neon-orange/10;
+   }
++  
++  .neon-border-purple {
++    --neon-color: theme('colors.neon.purple');
++    @apply neon-border before:from-purple-500/50 before:to-purple-500/10;
++  }
++  
++  .grid-pattern {
++    background-image: 
++      linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
++      linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
++    background-size: 20px 20px;
++  }
++  
++  .grid-pattern-small {
++    background-image: 
++      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
++      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
++    background-size: 10px 10px;
++  }
+ }
+
+@@ .. @@
+   .gradient-heading {
+     @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-primary to-neon-green font-bold;
+   }
+   
+   .label-badge {
+     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+   }
++  
++  .scrollbar-none {
++    -ms-overflow-style: none;
++    scrollbar-width: none;
++  }
++  
++  .scrollbar-none::-webkit-scrollbar {
++    display: none;
++  }
+ }
