@@ -24,6 +24,14 @@ export default {
     },
     extend: {
       colors: {
+        borderColor: {
+        'neon-green': '#00ff00',
+        'neon-blue': '#00ffff',
+      },
+      boxShadow: {
+        'neon': '0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 15px #00ff00',
+        'neon-blue': '0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 15px #00ffff',
+      },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

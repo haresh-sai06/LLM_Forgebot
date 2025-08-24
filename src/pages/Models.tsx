@@ -1,4 +1,5 @@
-
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { 
@@ -9,88 +10,27 @@ import {
   Download, 
   Filter, 
   Layers, 
-  Cpu, // Changed from Memory to Cpu which is available in lucide
+  Cpu, 
   Search, 
   Star, 
   Zap 
 } from "lucide-react";
 
 export default function Models() {
-  // Sample model data
-  const models = [
-    {
-      id: 1,
-      name: "LiteBot 3B",
-      size: "3B",
-      category: "Basic",
-      trainingTime: "30 min",
-      memoryUse: "4GB",
-      license: "Apache 2.0",
-      featured: false,
-      capabilities: ["General chat", "Basic Q&A", "Light context handling"],
-      badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-    },
-    {
-      id: 2,
-      name: "MidRange 7B",
-      size: "7B",
-      category: "Pro",
-      trainingTime: "1.5 hrs",
-      memoryUse: "8GB",
-      license: "MIT",
-      featured: true,
-      capabilities: ["Advanced chat", "Document Q&A", "Good context retention", "Basic reasoning"],
-      badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-    },
-    {
-      id: 3,
-      name: "PowerBot 13B",
-      size: "13B",
-      category: "Advanced",
-      trainingTime: "3 hrs",
-      memoryUse: "16GB",
-      license: "MIT",
-      featured: false,
-      capabilities: ["Complex reasoning", "Long context window", "Specialized knowledge", "Code generation"],
-      badgeColor: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-    },
-    {
-      id: 4,
-      name: "LiteBot Code",
-      size: "3B",
-      category: "Basic",
-      trainingTime: "45 min",
-      memoryUse: "4GB",
-      license: "Apache 2.0",
-      featured: false,
-      capabilities: ["Code completion", "Basic debugging", "Documentation generation"],
-      badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-    },
-    {
-      id: 5,
-      name: "Ultra 30B",
-      size: "30B",
-      category: "Advanced",
-      trainingTime: "8 hrs",
-      memoryUse: "32GB",
-      license: "CC BY-NC",
-      featured: false,
-      capabilities: ["Human-like chat", "Expert reasoning", "Creative content", "Specialized domains"],
-      badgeColor: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-    },
-    {
-      id: 6,
-      name: "MidRange Writer",
-      size: "7B",
-      category: "Pro",
-      trainingTime: "2 hrs",
-      memoryUse: "8GB",
-      license: "MIT",
-      featured: false,
-      capabilities: ["Content writing", "Blog posts", "Marketing copy", "Basic storytelling"],
-      badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-    }
-  ];
+  const navigate = useNavigate();
+  const [models, setModels] = useState<any[]>([]);
+
+  // Fetch from backend
+  useEffect(() => {
+    fetch("http://localhost:8000/models")
+      .then((res) => res.json())
+      .then((data) => setModels(data.models || []))
+      .catch((err) => console.error("Error fetching models:", err));
+  }, []);
+
+  const handleUseModel = (model: any) => {
+    navigate("/chat", { state: { model } });
+  };
 
   return (
     <div className="min-h-screen flex flex-col dark">
@@ -150,9 +90,15 @@ export default function Models() {
       {/* Model Grid */}
       <section className="flex-1 py-12">
         <div className="container-content">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 group">
             {models.map((model) => (
-              <Card key={model.id} className={`overflow-hidden glass-card ${model.featured ? 'neon-border-blue' : ''}`}>
+              <Card
+                key={model.id}
+                className={`overflow-hidden glass-card neon-border-blue 
+                transition-all duration-300
+                hover:neon-border-green 
+                hover:shadow-lg hover:scale-105`}
+              >
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">
                     <div>
@@ -175,7 +121,7 @@ export default function Models() {
                       <span>Est. Training: {model.trainingTime}</span>
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
-                      <Cpu className="h-4 w-4 mr-2" /> {/* Changed from Memory to Cpu */}
+                      <Cpu className="h-4 w-4 mr-2" />
                       <span>Memory: {model.memoryUse}</span>
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
@@ -201,7 +147,7 @@ export default function Models() {
                     <Download className="h-4 w-4 mr-1.5" />
                     Download
                   </Button>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => handleUseModel(model)}>
                     <Zap className="h-4 w-4 mr-1.5" />
                     Use This Model
                   </Button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +23,57 @@ export default function Builder() {
   const [formality, setFormality] = useState([50]);
   const [creativity, setCreativity] = useState([70]);
   const [conciseness, setConciseness] = useState([30]);
-  
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [models, setModels] = useState([
+    {
+      id: 'litebot-3b',
+      name: "LiteBot 3B",
+      description: "Fast, lightweight model for simple applications.",
+      specs: "3B parameters • 4GB RAM • Fast training",
+      badge: "Basic"
+    },
+    {
+      id: 'midrange-7b',
+      name: "MidRange 7B",
+      description: "Balanced performance and capability.",
+      specs: "7B parameters • 8GB RAM • Medium training",
+      badge: "Pro",
+      recommended: true
+    },
+    {
+      id: 'powerbot-13b',
+      name: "PowerBot 13B",
+      description: "Advanced reasoning and understanding.",
+      specs: "13B parameters • 16GB RAM • Longer training",
+      badge: "Advanced"
+    },
+    {
+      id: 'ultra-30b',
+      name: "Ultra 30B",
+      description: "State-of-the-art performance for complex tasks.",
+      specs: "30B parameters • 32GB RAM • Extended training",
+      badge: "Advanced"
+    }
+  ]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  useEffect(() => {
+    // Placeholder for fetching models from backend (Ollama integration)
+    // async function fetchModels() {
+    //   try {
+    //     const response = await fetch('/api/ollama/models');
+    //     const data = await response.json();
+    //     setModels(data.models); // Assume data has models array
+    //     // Set default to llama3 if available
+    //     const llama3 = data.models.find(m => m.name.toLowerCase().includes('llama3'));
+    //     if (llama3) setSelectedModel(llama3.id);
+    //   } catch (error) {
+    //     console.error('Failed to fetch models:', error);
+    //   }
+    // }
+    // fetchModels();
+  }, []);
+
   const steps = [
     { number: 1, title: "Choose Model" },
     { number: 2, title: "Upload Data" },
@@ -42,6 +92,17 @@ export default function Builder() {
     if (activeStep > 1) {
       setActiveStep(activeStep - 1);
     }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -94,34 +155,12 @@ export default function Builder() {
                 <h2 className="text-xl font-semibold mb-4">Select a Base Model</h2>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    {
-                      name: "LiteBot 3B",
-                      description: "Fast, lightweight model for simple applications.",
-                      specs: "3B parameters • 4GB RAM • Fast training",
-                      badge: "Basic"
-                    },
-                    {
-                      name: "MidRange 7B",
-                      description: "Balanced performance and capability.",
-                      specs: "7B parameters • 8GB RAM • Medium training",
-                      badge: "Pro",
-                      recommended: true
-                    },
-                    {
-                      name: "PowerBot 13B",
-                      description: "Advanced reasoning and understanding.",
-                      specs: "13B parameters • 16GB RAM • Longer training",
-                      badge: "Advanced"
-                    },
-                    {
-                      name: "Ultra 30B",
-                      description: "State-of-the-art performance for complex tasks.",
-                      specs: "30B parameters • 32GB RAM • Extended training",
-                      badge: "Advanced"
-                    }
-                  ].map((model, index) => (
-                    <Card key={index} className={`cursor-pointer hover:border-primary transition-colors ${model.recommended ? 'border-primary' : ''}`}>
+                  {models.map((model) => (
+                    <Card 
+                      key={model.id} 
+                      className={`cursor-pointer transition-colors ${selectedModel === model.id ? 'border-primary bg-primary/5' : 'hover:border-primary'}`}
+                      onClick={() => setSelectedModel(model.id)}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div>
@@ -255,8 +294,31 @@ export default function Builder() {
                       <p className="text-sm text-muted-foreground mb-4">
                         Support for PDF, TXT, CSV, JSON, DOCX files
                       </p>
-                      <Button>Browse Files</Button>
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.txt,.csv,.json,.docx"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="file-upload"
+                      />
+                      <label htmlFor="file-upload" className="cursor-pointer">
+                        <Button>Browse Files</Button>
+                      </label>
                     </div>
+                    {uploadedFiles.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium mb-2">Uploaded Files:</h4>
+                        <ul className="space-y-2">
+                          {uploadedFiles.map((file, index) => (
+                            <li key={index} className="flex items-center justify-between text-sm border p-2 rounded">
+                              <span>{file.name}</span>
+                              <Button variant="ghost" size="sm" onClick={() => removeFile(index)}>Remove</Button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
                 

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Globe, Lock, Code } from "lucide-react";
 import { Link } from "react-router-dom";
+import ProfilePic from "C:/Users/share/Pictures/Photo/mypic.jpeg";
 
 export default function About() {
   return (
@@ -82,34 +83,40 @@ export default function About() {
       </section>
       
       {/* Team Section */}
-      <section className="section">
-        <div className="container-content">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Meet the Team</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              A small team of dedicated developers and designers building the future of private AI.
-            </p>
+<section className="section">
+  <div className="container-content">
+    <div className="text-center mb-12">
+      <h2 className="text-2xl md:text-3xl font-bold mb-4">Meet the Team</h2>
+      <p className="text-muted-foreground max-w-2xl mx-auto">
+        A small team of dedicated developers and designers building the future of private AI.
+      </p>
+    </div>
+    
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-8">
+      {[
+        { name: "Haresh Sainaath", role: "Founder / CEO", shape: "rounded-2xl", image: ProfilePic }
+        // later you can add more: { name, role, shape, image: "/images/jasmine.jpg" }
+      ].map((member, index) => (
+        <div
+          key={index}
+          className="flex flex-col items-center text-center p-6 glass-card neon-border-blue rounded-2xl hover:scale-105 hover:shadow-xl transition-all duration-300"
+        >
+          <div className={`w-40 h-40 mb-6 ${member.shape} overflow-hidden border-4 border-primary/40 shadow-md`}>
+            <img 
+              src={member.image} 
+              alt={member.name}
+              className="w-full h-full object-cover"
+            />
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { name: "Alex Chen", role: "Co-Founder / CEO", shape: "rounded-full" },
-              { name: "Jasmine Lee", role: "Head of Engineering", shape: "rounded-lg" },
-              { name: "Marcus Rivera", role: "Lead Designer", shape: "rounded-2xl" },
-              { name: "Sophia Khan", role: "AI Ethicist", shape: "rounded-full" }
-            ].map((member, index) => (
-              <div key={index} className="flex flex-col items-center text-center p-4">
-                {/* Abstract "profile picture" to match the theme */}
-                <div className={`w-24 h-24 bg-primary/10 mb-4 ${member.shape} flex items-center justify-center`}>
-                  <div className={`w-12 h-12 bg-primary/20 ${member.shape}`}></div>
-                </div>
-                <h3 className="text-lg font-semibold">{member.name}</h3>
-                <p className="text-sm text-muted-foreground">{member.role}</p>
-              </div>
-            ))}
-          </div>
+
+          <h3 className="text-xl font-semibold">{member.name}</h3>
+          <p className="text-sm text-muted-foreground">{member.role}</p>
         </div>
-      </section>
+      ))}
+    </div>
+  </div>
+</section>
+
       
       {/* CTA Section */}
       <section className="section bg-card">
