@@ -16,6 +16,11 @@ import About from "./pages/About";
 import Signup from "./pages/Signup";
 import AuthPage from "./pages/AuthPage"; 
 import ChatWindow from "./pages/ChatWindow";
+import TrainedChatWindow from "./pages/TrainedChatWindow";
+import ImageGeneration from "./pages/ImageGeneration";
+import AudioGeneration from "./pages/AudioGeneration";
+import DataScienceTools from "./pages/DataScienceTools";
+import ThreeDARTools from "./pages/ThreeDARTools";
 
 import { MainNav } from "./components/main-nav";
 import { Footer } from "./components/footer";
@@ -46,6 +51,11 @@ const AppContent = () => {
           <Route path="/models" element={<Models />} />
           <Route path="/chat" element={<ChatWindow />} />
           <Route path="/builder" element={<Builder />} />
+          <Route path="/trained-chat" element={<TrainedChatWindow />} />
+          <Route path="/data-science" element={<DataScienceTools />} />
+          <Route path="/3d-ar" element={<ThreeDARTools />} />
+          <Route path="/audio-gen" element={<AudioGeneration />} />
+          <Route path="/image-gen" element={<ImageGeneration />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />

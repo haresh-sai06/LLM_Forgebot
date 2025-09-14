@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,23 +18,27 @@ import {
   Sparkles
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress"; // Assuming you have a Progress component
+
 
 export default function Builder() {
+  const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(1);
   const [formality, setFormality] = useState([50]);
   const [creativity, setCreativity] = useState([70]);
   const [conciseness, setConciseness] = useState([30]);
-  const [selectedModel, setSelectedModel] = useState(null);
+  const [selectedModel, setSelectedModel] = useState("litebot-3b");
+  const [trainedModelId, setTrainedModelId] = useState<string | null>(null); // Default to LiteBot 3B
   const [models, setModels] = useState([
     {
-      id: 'litebot-3b',
+      id: "litebot-3b",
       name: "LiteBot 3B",
       description: "Fast, lightweight model for simple applications.",
       specs: "3B parameters • 4GB RAM • Fast training",
       badge: "Basic"
     },
     {
-      id: 'midrange-7b',
+      id: "midrange-7b",
       name: "MidRange 7B",
       description: "Balanced performance and capability.",
       specs: "7B parameters • 8GB RAM • Medium training",
@@ -41,14 +46,14 @@ export default function Builder() {
       recommended: true
     },
     {
-      id: 'powerbot-13b',
+      id: "powerbot-13b",
       name: "PowerBot 13B",
       description: "Advanced reasoning and understanding.",
       specs: "13B parameters • 16GB RAM • Longer training",
       badge: "Advanced"
     },
     {
-      id: 'ultra-30b',
+      id: "ultra-30b",
       name: "Ultra 30B",
       description: "State-of-the-art performance for complex tasks.",
       specs: "30B parameters • 32GB RAM • Extended training",
@@ -56,22 +61,20 @@ export default function Builder() {
     }
   ]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [trainingProgress, setTrainingProgress] = useState(0); // For loading bar
+  const [isTraining, setIsTraining] = useState(false); // Training state
 
   useEffect(() => {
-    // Placeholder for fetching models from backend (Ollama integration)
-    // async function fetchModels() {
-    //   try {
-    //     const response = await fetch('/api/ollama/models');
-    //     const data = await response.json();
-    //     setModels(data.models); // Assume data has models array
-    //     // Set default to llama3 if available
-    //     const llama3 = data.models.find(m => m.name.toLowerCase().includes('llama3'));
-    //     if (llama3) setSelectedModel(llama3.id);
-    //   } catch (error) {
-    //     console.error('Failed to fetch models:', error);
-    //   }
-    // }
-    // fetchModels();
+    // Fetch models from backend (optional, using local data for now)
+    // fetch("http://localhost:8000/models")
+    //   .then((res) => res.json())
+    //   .then((data) => {
+    //     setModels(data.models);
+    //     const litebot = data.models.find(m => m.id === "litebot-3b");
+    //     if (litebot) setSelectedModel(litebot.id);
+    //   })
+    //   .catch((err) => console.error("Error fetching models:", err));
   }, []);
 
   const steps = [
@@ -97,13 +100,89 @@ export default function Builder() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setUploadedFiles(prev => [...prev, ...newFiles]);
+      setUploadedFiles((prev) => [...prev, ...newFiles]);
+      console.log("Uploaded files:", newFiles);
+    }
+  };
+
+  const handleBrowseClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click(); // manually trigger the hidden input
     }
   };
 
   const removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
+
+const startTraining = async () => {
+  if (!selectedModel || uploadedFiles.length === 0) {
+    alert("Please select a model and upload files first!");
+    return;
+  }
+
+  setIsTraining(true);
+  setTrainingProgress(0);
+
+  const formData = new FormData();
+  uploadedFiles.forEach(file => formData.append("files", file));
+  try {
+    const uploadResponse = await fetch("http://localhost:8000/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!uploadResponse.ok) throw new Error("Upload failed");
+    const uploadData = await uploadResponse.json();
+    const filePaths = uploadData.uploaded_files.map(f => f.path);
+
+    const customization = {
+      formality: formality[0],
+      creativity: creativity[0],
+      conciseness: conciseness[0],
+      bot_name: "CustomSpecialist",
+      system_prompt: "You are a helpful assistant...",
+      temperature: 0.7,
+      max_tokens: 256,
+      context_window: 4096
+    };
+
+    const trainResponse = await fetch("http://localhost:8000/train", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model_id: selectedModel, files: filePaths, customization })
+    });
+
+    if (!trainResponse.ok) {
+      const errorText = await trainResponse.text();
+      throw new Error(`Training failed: ${trainResponse.status} - ${errorText}`);
+    }
+    
+    const data = await trainResponse.json();
+    console.log("Training result:", data);
+    setTrainedModelId(data.trained_model_id || null);
+    setActiveStep(5); 
+
+    const interval = setInterval(() => {
+      setTrainingProgress(prev => {
+        const newProgress = prev + 10;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setIsTraining(false);
+        }
+        return Math.min(newProgress, 100);
+      });
+    }, 1000);
+  } catch (error) {
+    console.error("Training error:", error);
+    setIsTraining(false);
+    setTrainingProgress(0);
+    if (error.message.includes("CORS")) {
+      alert("CORS issue detected. Ensure the backend is configured to allow this origin.");
+    } else {
+      alert("Upload or training failed. Check console for details.");
+    }
+  }
+};;
 
   return (
     <div className="min-h-screen flex flex-col dark">
@@ -229,7 +308,7 @@ export default function Builder() {
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Required Memory</span>
-                        <span className="font-medium">8GB RAM</span>
+                        <span className="font-medium">4GB RAM</span> {/* Match LiteBot 3B */}
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div className="bg-primary h-2 rounded-full w-[40%]"></div>
@@ -239,7 +318,7 @@ export default function Builder() {
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Required CPU</span>
-                        <span className="font-medium">4 Cores</span>
+                        <span className="font-medium">2 Cores</span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div className="bg-primary h-2 rounded-full w-[30%]"></div>
@@ -249,7 +328,7 @@ export default function Builder() {
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Est. Training Time</span>
-                        <span className="font-medium">1.5 Hours</span>
+                        <span className="font-medium">1 Hour</span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div className="bg-primary h-2 rounded-full w-[25%]"></div>
@@ -295,16 +374,19 @@ export default function Builder() {
                         Support for PDF, TXT, CSV, JSON, DOCX files
                       </p>
                       <input
-                        type="file"
-                        multiple
-                        accept=".pdf,.txt,.csv,.json,.docx"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id="file-upload"
-                      />
-                      <label htmlFor="file-upload" className="cursor-pointer">
-                        <Button>Browse Files</Button>
-                      </label>
+        type="file"
+        multiple
+        accept=".pdf,.txt,.csv,.json,.docx"
+        onChange={handleFileUpload}
+        ref={fileInputRef}
+        className="hidden"
+      />
+
+                      <label htmlFor="file-upload">
+      <Button type="button" onClick={handleBrowseClick}>
+        Browse Files
+      </Button>
+    </label>
                     </div>
                     {uploadedFiles.length > 0 && (
                       <div className="mt-4">
@@ -626,26 +708,55 @@ export default function Builder() {
             </div>
           )}
           
-          {/* Step 4-5: Simple placeholder for now */}
+          {/* Step 4: Train */}
           {activeStep === 4 && (
             <div className="text-center py-16">
               <h2 className="text-2xl font-bold mb-4">Training Your Bot</h2>
-              <p className="text-muted-foreground mb-8">This step would show the training progress interface</p>
-              <Button onClick={nextStep}>
-                Skip to Export
+              {isTraining ? (
+                <>
+                  <Progress value={trainingProgress} className="w-[60%] mx-auto mb-4" />
+                  <p className="text-muted-foreground">Training Progress: {trainingProgress}%</p>
+                </>
+              ) : (
+                <p className="text-muted-foreground mb-8">Click below to start training LiteBot 3B</p>
+              )}
+              <Button onClick={startTraining} disabled={isTraining}>
+                Start Training
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           )}
           
+          {/* Step 5: Export */}
           {activeStep === 5 && (
             <div className="text-center py-16">
               <h2 className="text-2xl font-bold mb-4">Export Your Bot</h2>
-              <p className="text-muted-foreground mb-8">This step would show export options and formats</p>
+              <p className="text-muted-foreground mb-8">Download your trained LiteBot 3B model</p>
               <Button onClick={() => setActiveStep(1)}>
-                Start Over
+                Export Model
                 <RotateCcw className="ml-2 h-4 w-4" />
               </Button>
+              <Button
+  onClick={() => {
+    if (trainedModelId) {
+      navigate("/trained-chat", {
+        state: {
+          model: {
+            id: trainedModelId,
+            name: "Trained LiteBot 3B",
+            description: "Your custom-trained model",
+          },
+        },
+      });
+    } else {
+      alert("Training data not available. Please train the model first.");
+    }
+  }}
+  className="ml-4"
+>
+  Test Your Bot
+  <RotateCcw className="ml-2 h-4 w-4" />
+</Button>
             </div>
           )}
         </div>
@@ -666,7 +777,7 @@ export default function Builder() {
           
           <Button
             onClick={nextStep}
-            disabled={activeStep === steps.length}
+            disabled={activeStep === steps.length || (activeStep === 4 && !isTraining)}
             className="gap-2"
           >
             {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
@@ -677,3 +788,4 @@ export default function Builder() {
     </div>
   );
 }
+

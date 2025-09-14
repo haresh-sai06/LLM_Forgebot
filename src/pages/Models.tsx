@@ -29,7 +29,17 @@ export default function Models() {
   }, []);
 
   const handleUseModel = (model: any) => {
-    navigate("/chat", { state: { model } });
+    if (model.id === 5) {
+      navigate("/image-gen", { state: { model } });
+    } else if (model.id === 6) {
+      navigate("/audio-gen", { state: { model } });
+    } else if (model.id === 7) {
+      navigate("/data-science", { state: { model } });
+    } else if (model.id === 8) {
+      navigate("/3d-ar", { state: { model } });
+    } else {
+      navigate("/chat", { state: { model } });
+    }
   };
 
   return (
@@ -94,10 +104,9 @@ export default function Models() {
             {models.map((model) => (
               <Card
                 key={model.id}
-                className={`overflow-hidden glass-card neon-border-blue 
-                transition-all duration-300
-                hover:neon-border-green 
-                hover:shadow-lg hover:scale-105`}
+                className={`overflow-hidden glass-card 
+                  transition-all duration-300 
+                  hover:shadow-lg hover:scale-105`}
               >
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">

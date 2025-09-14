@@ -33,7 +33,7 @@ const handleSend = async () => {
   setIsTyping(true);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 1000000); // 10s timeout
 
   try {
     const response = await fetch("http://localhost:11436/api/chat", {

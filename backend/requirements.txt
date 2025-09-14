@@ -1,0 +1,23 @@
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+pydantic==2.8.2
+PyMuPDF==1.24.9 # pdf text extraction (fast & robust)
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.1
+
+
+# HF + training
+torch==2.3.1 # Use CUDA-enabled build if you have GPU
+transformers==4.43.3
+datasets==2.20.0
+accelerate==0.33.0
+safetensors==0.4.4
+bitsandbytes==0.43.1 # For QLoRA (on Linux/Windows with CUDA)
+peft==0.12.0
+trl==0.9.6
+
+
+# Optional: GGUF export utilities
+sentencepiece==0.2.0

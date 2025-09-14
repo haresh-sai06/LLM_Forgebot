@@ -1,0 +1,2 @@
+FROM ./merged.gguf
+TEMPLATE """{{ .Prompt }}"""
