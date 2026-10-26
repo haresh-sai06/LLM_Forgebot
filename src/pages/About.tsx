@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Globe, Lock, Code } from "lucide-react";
 import { Link } from "react-router-dom";
-import ProfilePic from "C:/Users/share/Pictures/Photo/mypic.jpeg";
+
 
 export default function About() {
   return (
@@ -94,19 +94,15 @@ export default function About() {
     
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-8">
       {[
-        { name: "Haresh Sainaath", role: "Founder / CEO", shape: "rounded-2xl", image: ProfilePic }
+        { name: "Haresh Sainaath", role: "Founder / CEO", shape: "rounded-2xl", initial: "H" }
         // later you can add more: { name, role, shape, image: "/images/jasmine.jpg" }
       ].map((member, index) => (
         <div
           key={index}
           className="flex flex-col items-center text-center p-6 glass-card neon-border-blue rounded-2xl hover:scale-105 hover:shadow-xl transition-all duration-300"
         >
-          <div className={`w-40 h-40 mb-6 ${member.shape} overflow-hidden border-4 border-primary/40 shadow-md`}>
-            <img 
-              src={member.image} 
-              alt={member.name}
-              className="w-full h-full object-cover"
-            />
+          <div className={`w-40 h-40 mb-6 ${member.shape} overflow-hidden border-4 border-primary/40 shadow-md flex items-center justify-center bg-primary/15 text-4xl font-semibold`}>
+            {member.initial}
           </div>
 
           <h3 className="text-xl font-semibold">{member.name}</h3>

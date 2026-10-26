@@ -26,7 +26,15 @@ import {
   uploadStatusCopy,
 } from "@/lib/uploadPanelMotion";
 
-type ReadNote = { name: string; bytes: number; status: "read" | "unreadable" };
+type ReadNote = {
+  name: string;
+  bytes: number;
+  status: "extracted" | "unreadable";
+  excerpt: string;
+  chunkCount: number;
+};
+
+const INGEST_URL = "http://127.0.0.1:4194/ingest";
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(() => {
@@ -47,12 +55,30 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-async function readFileHead(file: File): Promise<ReadNote["status"]> {
+async function extractUpload(file: File): Promise<Pick<ReadNote, "status" | "excerpt" | "chunkCount">> {
   try {
-    await file.slice(0, 1024).arrayBuffer();
-    return "read";
+    const response = await fetch(INGEST_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "X-Filename": file.name,
+      },
+      body: await file.arrayBuffer(),
+    });
+    if (!response.ok) {
+      return { status: "unreadable", excerpt: "", chunkCount: 0 };
+    }
+    const payload = await response.json();
+    if (payload.status !== "extracted") {
+      return { status: "unreadable", excerpt: "", chunkCount: 0 };
+    }
+    return {
+      status: "extracted",
+      excerpt: typeof payload.excerpt === "string" ? payload.excerpt : "",
+      chunkCount: Number(payload.chunkCount) || 0,
+    };
   } catch {
-    return "unreadable";
+    return { status: "unreadable", excerpt: "", chunkCount: 0 };
   }
 }
 
@@ -148,8 +174,8 @@ export default function Builder() {
     try {
       const notes: ReadNote[] = [];
       for (const file of incoming) {
-        const status = await readFileHead(file);
-        notes.push({ name: file.name, bytes: file.size, status });
+        const extracted = await extractUpload(file);
+        notes.push({ name: file.name, bytes: file.size, ...extracted });
       }
       setUploadedFiles((prev) => [...prev, ...incoming]);
       setReadResults((prev) => [...prev, ...notes]);
@@ -506,9 +532,10 @@ const startTraining = async () => {
                         <h4 className="text-sm font-medium mb-2">File results</h4>
                         <ul className="space-y-2">
                           {readResults.map((file, index) => (
-                            <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3 text-sm border p-2 rounded">
+                            <li key={`${file.name}-${index}`} className="flex items-start justify-between gap-3 text-sm border p-2 rounded">
                               <span>
-                                {file.name} — {formatFileSize(file.bytes)} — {file.status === "read" ? "Read" : "Unreadable"}
+                                {file.name} — {formatFileSize(file.bytes)} — {file.status === "extracted" ? `Extracted · ${file.chunkCount} chunks` : "Unreadable"}
+                                {file.excerpt ? <span className="mt-1 block text-muted-foreground">{file.excerpt}</span> : null}
                               </span>
                               <Button variant="ghost" size="sm" onClick={() => removeFile(index)} disabled={isReadingFiles}>
                                 Remove

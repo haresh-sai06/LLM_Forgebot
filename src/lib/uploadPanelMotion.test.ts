@@ -32,6 +32,6 @@ test("upload phase names idle, reading, and done in words", () => {
   assert.equal(uploadPanelPhase(2, false), "done");
   assert.equal(uploadStatusCopy("idle", 0).label, "Idle");
   assert.equal(uploadStatusCopy("reading", 0).label, "Reading");
-  assert.match(uploadStatusCopy("done", 1).detail, /Read or Unreadable/);
+  assert.match(uploadStatusCopy("done", 1).detail, /Extracted or Unreadable/);
   assert.equal(formatFileSize(1536), "1.5 KB");
 });
