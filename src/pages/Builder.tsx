@@ -19,7 +19,42 @@ import {
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress"; // Assuming you have a Progress component
+import {
+  formatFileSize,
+  panelEntranceMotion,
+  uploadPanelPhase,
+  uploadStatusCopy,
+} from "@/lib/uploadPanelMotion";
 
+type ReadNote = { name: string; bytes: number; status: "read" | "unreadable" };
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return false;
+    }
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReduced(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
+
+  return reduced;
+}
+
+async function readFileHead(file: File): Promise<ReadNote["status"]> {
+  try {
+    await file.slice(0, 1024).arrayBuffer();
+    return "read";
+  } catch {
+    return "unreadable";
+  }
+}
 
 export default function Builder() {
   const navigate = useNavigate();
@@ -61,7 +96,15 @@ export default function Builder() {
     }
   ]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isReadingFiles, setIsReadingFiles] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [readResults, setReadResults] = useState<ReadNote[]>([]);
+  const readingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const entrance = panelEntranceMotion(prefersReducedMotion);
+  const uploadPhase = uploadPanelPhase(uploadedFiles.length, isReadingFiles);
+  const uploadStatus = uploadStatusCopy(uploadPhase, uploadedFiles.length);
   const [trainingProgress, setTrainingProgress] = useState(0); // For loading bar
   const [isTraining, setIsTraining] = useState(false); // Training state
 
@@ -97,11 +140,29 @@ export default function Builder() {
     }
   };
 
+  const ingestLocalFiles = async (list: FileList | File[]) => {
+    const incoming = Array.from(list);
+    if (incoming.length === 0 || readingRef.current) return;
+    readingRef.current = true;
+    setIsReadingFiles(true);
+    try {
+      const notes: ReadNote[] = [];
+      for (const file of incoming) {
+        const status = await readFileHead(file);
+        notes.push({ name: file.name, bytes: file.size, status });
+      }
+      setUploadedFiles((prev) => [...prev, ...incoming]);
+      setReadResults((prev) => [...prev, ...notes]);
+    } finally {
+      readingRef.current = false;
+      setIsReadingFiles(false);
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setUploadedFiles((prev) => [...prev, ...newFiles]);
-      console.log("Uploaded files:", newFiles);
+      void ingestLocalFiles(e.target.files);
+      e.target.value = "";
     }
   };
 
@@ -113,6 +174,28 @@ export default function Builder() {
 
   const removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setReadResults(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!readingRef.current) setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files?.length) {
+      void ingestLocalFiles(e.dataTransfer.files);
+    }
   };
 
 const startTraining = async () => {
@@ -365,37 +448,71 @@ const startTraining = async () => {
               <div className="lg:col-span-2">
                 <h2 className="text-xl font-semibold mb-4">Upload Training Data</h2>
                 
-                <Card className="mb-6">
+                <Card
+                  className={`mb-6${entrance.animate ? " upload-panel-enter" : ""}`}
+                  style={
+                    entrance.animate
+                      ? {
+                          animationDuration: `${entrance.durationMs}ms`,
+                          animationTimingFunction: entrance.easing,
+                          animationFillMode: "both",
+                        }
+                      : { animation: "none" }
+                  }
+                  aria-busy={uploadPhase === "reading"}
+                >
                   <CardContent className="p-6">
-                    <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                    <div className="mb-4 flex items-start justify-between gap-3" role="status" aria-live="polite">
+                      <div>
+                        <p className="text-sm font-medium">Status: {uploadStatus.label}</p>
+                        <p className="text-sm text-muted-foreground">{uploadStatus.detail}</p>
+                      </div>
+                      <span className="text-xs font-medium border rounded-full px-2 py-0.5 shrink-0">
+                        {uploadStatus.label}
+                      </span>
+                    </div>
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-8 text-center ${dragActive ? "border-primary" : ""}`}
+                      onDragEnter={handleDragOver}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
                       <FileUp className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-medium mb-2">Drag and drop files here</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <p className="text-sm text-muted-foreground mb-2">
                         Support for PDF, TXT, CSV, JSON, DOCX files
                       </p>
+                      <p id="upload-training-files-label" className="text-sm font-medium mb-4">Upload training files</p>
+                      {dragActive && (
+                        <p className="text-sm font-medium mb-4">Drop zone active. Release to add files.</p>
+                      )}
                       <input
-        type="file"
-        multiple
-        accept=".pdf,.txt,.csv,.json,.docx"
-        onChange={handleFileUpload}
-        ref={fileInputRef}
-        className="hidden"
-      />
-
-                      <label htmlFor="file-upload">
-      <Button type="button" onClick={handleBrowseClick}>
-        Browse Files
-      </Button>
-    </label>
+                        id="file-upload"
+                        type="file"
+                        multiple
+                        accept=".pdf,.txt,.csv,.json,.docx"
+                        onChange={handleFileUpload}
+                        ref={fileInputRef}
+                        className="hidden"
+                        aria-labelledby="upload-training-files-label"
+                      />
+                      <Button type="button" onClick={handleBrowseClick} disabled={isReadingFiles}>
+                        Browse Files
+                      </Button>
                     </div>
-                    {uploadedFiles.length > 0 && (
+                    {readResults.length > 0 && (
                       <div className="mt-4">
-                        <h4 className="text-sm font-medium mb-2">Uploaded Files:</h4>
+                        <h4 className="text-sm font-medium mb-2">File results</h4>
                         <ul className="space-y-2">
-                          {uploadedFiles.map((file, index) => (
-                            <li key={index} className="flex items-center justify-between text-sm border p-2 rounded">
-                              <span>{file.name}</span>
-                              <Button variant="ghost" size="sm" onClick={() => removeFile(index)}>Remove</Button>
+                          {readResults.map((file, index) => (
+                            <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3 text-sm border p-2 rounded">
+                              <span>
+                                {file.name} — {formatFileSize(file.bytes)} — {file.status === "read" ? "Read" : "Unreadable"}
+                              </span>
+                              <Button variant="ghost" size="sm" onClick={() => removeFile(index)} disabled={isReadingFiles}>
+                                Remove
+                              </Button>
                             </li>
                           ))}
                         </ul>
