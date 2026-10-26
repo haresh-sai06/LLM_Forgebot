@@ -15,12 +15,15 @@ def _clean(text: str) -> str:
 
 def extract_pdf_text(path: str) -> str:
     doc = fitz.open(path)
-    chunks = []
-    for page in doc:
-        txt = page.get_text("text") or ""
-        if txt.strip():
-            chunks.append(txt)
+    try:
+        chunks = []
+        for page in doc:
+            txt = page.get_text("text") or ""
+            if txt.strip():
+                chunks.append(txt)
         return _clean("\n".join(chunks))
+    finally:
+        doc.close()
 
 
 def extract_csv_qa(path: str) -> pd.DataFrame:
@@ -42,11 +45,14 @@ def extract_csv_qa(path: str) -> pd.DataFrame:
 def chunk_text(text: str, max_tokens: int = 512) -> list[str]:
     """Token-approximate chunking by words; swap with tiktoken if desired."""
     words = text.split()
+    if not words:
+        return []
     approx_tok_per_word = 1.3
-    step = int(max_tokens / approx_tok_per_word)
+    # A non-positive step makes range() raise or loop forever.
+    step = max(1, int(max_tokens / approx_tok_per_word))
     out = []
     for i in range(0, len(words), step):
-        chunk = " ".join(words[i:i+step])
-    if len(chunk) > 50:
-        out.append(chunk)
+        chunk = " ".join(words[i:i + step])
+        if len(chunk) > 50:
+            out.append(chunk)
     return out
