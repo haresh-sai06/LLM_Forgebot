@@ -45,14 +45,14 @@ export function uploadStatusCopy(phase: UploadPhase, fileCount: number): { label
   if (phase === "reading") {
     return {
       label: "Reading",
-      detail: "Reading file headers on this device. Training has not started.",
+      detail: "Extracting text with the local ingest module. Training has not started.",
     };
   }
   if (phase === "done") {
     const noun = fileCount === 1 ? "file" : "files";
     return {
       label: "Done",
-      detail: `${fileCount} ${noun} ready. Each row says Read or Unreadable.`,
+      detail: `${fileCount} ${noun} ready. Each row says Extracted or Unreadable.`,
     };
   }
   return {

@@ -52,5 +52,33 @@ class ChunkTextTests(unittest.TestCase):
         self.assertEqual(chunks, [token, token])
 
 
+class ExtractUploadTests(unittest.TestCase):
+    def test_text_upload_returns_the_sentence_and_a_chunk(self):
+        sentence = "FORGEBOT_MARKER pump inspection notes " + ("token " * 40)
+        result = ingest.extract_upload("notes.txt", sentence.encode("utf-8"))
+        self.assertEqual(result["status"], "extracted")
+        self.assertIn("FORGEBOT_MARKER", result["excerpt"])
+        self.assertGreaterEqual(result["chunkCount"], 1)
+        self.assertIn("FORGEBOT_MARKER", result["chunks"][0])
+
+    def test_pdf_upload_keeps_every_page(self):
+        doc = fitz.open()
+        try:
+            doc.new_page().insert_text((72, 72), "PAGE1 unique content that should be extracted from the upload.")
+            doc.new_page().insert_text((72, 72), "PAGE2 unique content that should be extracted from the upload.")
+            data = doc.tobytes()
+        finally:
+            doc.close()
+        result = ingest.extract_upload("manual.pdf", data)
+        self.assertEqual(result["status"], "extracted")
+        self.assertIn("PAGE1", result["excerpt"] + " ".join(result["chunks"]))
+        self.assertIn("PAGE2", " ".join(result["chunks"]) + result["excerpt"])
+
+    def test_unknown_type_is_unreadable(self):
+        result = ingest.extract_upload("model.bin", b"not text")
+        self.assertEqual(result["status"], "unreadable")
+        self.assertEqual(result["chunks"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
