@@ -21,6 +21,7 @@ TRL 6 is not claimed. Nobody outside this session used the builder, and no model
 - The session did not click "Start Training".
 - Unit commands on the same tree: `python -m unittest discover -s tests -p test_*.py -v` — 7 passed, 0 failed. `node --experimental-strip-types --test src/lib/uploadPanelMotion.test.ts` — 3 passed, 0 failed.
 - The PDF unit test still checks that `extract_upload` keeps text from every page. That check is a local test, not a second browser session.
+- On 4 November 2026, a note shorter than 50 characters is kept as a chunk instead of an extracted file with zero chunks. The unit tests cover that. Chrome was not opened again, and no training run was started. This note does not raise the rating and does not support TRL 6.
 
 ## Why this is not higher
 

@@ -37,11 +37,16 @@ class ExtractPdfTextTests(unittest.TestCase):
 class ChunkTextTests(unittest.TestCase):
     def test_keeps_every_long_chunk(self):
         # max_tokens=13 -> step = int(13/1.3) = 10 words.
-        # Ten copies of "token" are 59 characters, so each slice qualifies.
+        # Ten copies of "token" are one slice. Every slice is kept.
         words = ["token"] * 30
         chunks = ingest.chunk_text(" ".join(words), max_tokens=13)
         self.assertEqual(len(chunks), 3)
         self.assertTrue(all(len(chunk.split()) == 10 for chunk in chunks))
+
+    def test_keeps_a_short_note(self):
+        note = "Seal failed at pump 2."
+        self.assertLess(len(note), 50)
+        self.assertEqual(ingest.chunk_text(note), [note])
 
     def test_empty_text_returns_empty_list(self):
         self.assertEqual(ingest.chunk_text("   "), [])
@@ -73,6 +78,13 @@ class ExtractUploadTests(unittest.TestCase):
         self.assertEqual(result["status"], "extracted")
         self.assertIn("PAGE1", result["excerpt"] + " ".join(result["chunks"]))
         self.assertIn("PAGE2", " ".join(result["chunks"]) + result["excerpt"])
+
+    def test_short_text_upload_is_still_a_chunk(self):
+        note = "Seal failed at pump 2."
+        result = ingest.extract_upload("notes.txt", note.encode("utf-8"))
+        self.assertEqual(result["status"], "extracted")
+        self.assertEqual(result["chunkCount"], 1)
+        self.assertEqual(result["chunks"], [note])
 
     def test_unknown_type_is_unreadable(self):
         result = ingest.extract_upload("model.bin", b"not text")
