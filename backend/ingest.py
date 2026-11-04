@@ -53,7 +53,9 @@ def chunk_text(text: str, max_tokens: int = 512) -> list[str]:
     out = []
     for i in range(0, len(words), step):
         chunk = " ".join(words[i:i + step])
-        if len(chunk) > 50:
+        # A short note is still the document. Dropping slices under 50
+        # characters made a one-line upload extract with zero chunks.
+        if chunk:
             out.append(chunk)
     return out
 
